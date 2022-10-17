@@ -33,5 +33,4 @@ class People(BaseModel):
 
     @validator('homeworld')
     def get_homeworld_name(cls, url):
-        print(url)
         return get_homeworld_by_url(url)
