@@ -1,0 +1,28 @@
+{% extends 'index.html' %}
+{% block head %}
+<div style="display: inline-flex;">
+    <h2>Collections</h2>
+    <button type="button"
+            class="btn btn-success"
+            id="fetch_data">Fetch
+    </button>
+</div>
+{% endblock %}
+{% block body %}
+<table id="Table-1" class="table"
+       data-id-field="code"
+       data-show-pagination-switch="false">
+    <tbody>
+    {% for i in csv %}
+    <tr>
+        <td>
+            <a href="/csv/{{ i.filename }}">
+                {{ i.date }}
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<script src="../static/js/main.js"></script>
+{% endblock %}

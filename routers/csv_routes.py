@@ -4,10 +4,10 @@ from fastapi import APIRouter, Request
 from typing import List
 
 from fastapi_sqlalchemy import db
+from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 
 from schemas.People import People
-from schemas.CSVMeta import CSVMeta as SchemaCSVMeta
 
 from app.csv_meta import CSVMeta as ModelCSVMeta
 import uuid
@@ -20,10 +20,10 @@ templates = Jinja2Templates(directory="templates")
 @router.get("/")
 def main(request: Request):
     csv_meta = db.session.query(ModelCSVMeta).all()
-    return templates.TemplateResponse("index.html", {"request": request, "csv": csv_meta})
+    return templates.TemplateResponse("main.html", {"request": request, "csv": csv_meta})
 
 
-@router.post("/fetch_csv/")  # , response_model=SchemaCSVMeta)
+@router.post("/fetch_csv/")
 def fetch_csv(people: List[People]):
     new_filename = str(uuid.uuid4()) + '.csv'
     table1 = etl.fromdicts([i.dict() for i in people])
@@ -43,3 +43,18 @@ def get_csv_data(request: Request, csv_name: str):
                                                         "csv_head": etl.header(table1),
                                                         "csv_data": etl.data(table1)
                                                         })
+
+
+@router.api_route("/csv/{csv_name}/count/", methods=['GET', 'POST'], response_class=HTMLResponse)
+def count_csv_data(request: Request, csv_name: str, fields: List[str]=("name",)):
+    initial_data = etl.fromcsv(f"csv_data/{csv_name}")
+    counted_data = etl.valuecounts(initial_data, *fields)
+
+    counted_data = etl.cutout(counted_data, 'frequency')
+    return templates.TemplateResponse("value_count.html", {"request": request,
+                                                           "csv_name": csv_name,
+                                                           "csv_all_head": etl.header(initial_data),
+                                                           "csv_head": etl.header(counted_data),
+                                                           "csv_data": etl.data(counted_data)
+                                                           })
+
